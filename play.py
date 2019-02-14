@@ -38,35 +38,44 @@ class Play:
 
         self.merge_field()
 
-    def piece_fall(self):
+    def piece_fall(self, test=False):
 
-        if self.piece is None:
-            if self.delete_row(self.test_fullrow()):
+        if not test:
+            if self.piece is None:
+                if self.delete_row(self.test_fullrow()):
+                    return
+
+                self.piece_insert(random.choice(list(pieces.keys())))
                 return
-
-            self.piece_insert(random.choice(list(pieces.keys())))
-            return
 
         new_py = self.py + 1
 
         if self.test_collision(py=new_py):
+            if test:
+                return True
             self.piece_ground()
             return
 
         self.py = new_py
+        if test:
+            return False
+
         self.merge_field()
 
-    def piece_move(self, side='L'):
+    def piece_move(self, side='L', test=False):
 
         new_px = (self.px + 1) if (side != 'L') else (self.px - 1)
 
-        if self.test_collision(px = new_px):
-            return
+        if self.test_collision(px=new_px):
+            return False
 
         self.px = new_px
+        if test:
+            return True
+
         self.merge_field()
 
-    def piece_rotate(self, side='L'):
+    def piece_rotate(self, side='L', test=False):
 
         if self.piece is None:
             return
@@ -85,9 +94,12 @@ class Play:
                     new_piece[-1].append(self.piece[x][w-1-y])
 
         if self.test_collision(new_piece):
-            return
+            return False
 
         self.piece = new_piece
+        if test:
+            return True
+
         self.merge_field()
 
     def piece_ground(self):
