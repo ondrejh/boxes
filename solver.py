@@ -116,7 +116,7 @@ def solve(field, piece, px, py, show=None):
             #    field = merge_field(ground, test_piece, test_x, ory)
             #    show(field, wait=200)
 
-            for i in range(len(field)):
+            for i in range(height):
                 test_y = ory + i + 1
                 if test_collision(ground, test_piece, test_x, test_y):
                     test_y -= 1
