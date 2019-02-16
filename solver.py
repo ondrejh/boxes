@@ -27,7 +27,7 @@ def test_collision(ground, piece, px, py):
 
     for x in range(pw):
         for y in range(ph):
-            if (piece != 0):
+            if (piece[y][x] != 0):
                 pxx = px + x
                 pyy = py + y
 
@@ -83,7 +83,7 @@ def measure(field):
             if field[y][x] != 0:
                 cnt += 1
         row_weight = (height - y) * cnt
-        print(y, cnt, row_weight)
+        #print(y, cnt, row_weight)
         weight += row_weight
 
     return weight
@@ -158,6 +158,9 @@ def solve(field, piece, px, py, show=None):
             print('Rot {}x, Shift {}x, Down {}x, Weight {}'.format(rot, shift, down, weight))
             possiblities.append([rot, shift, down])
             weights.append(weight)
+            if show is not None:
+                field = merge_field(ground, test_piece, test_x, test_y + down)
+                show(field, wait=200)
 
     index = weights.index(min(weights))
     result = possiblities[index]
