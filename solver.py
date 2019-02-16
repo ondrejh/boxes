@@ -74,22 +74,17 @@ def measure(field):
     width = len(field[0])
     height = len(field)
 
-    weight = 0
+    weight: int = 0
 
-    for y in reversed(range(height)):
-        row = height-y
-        row_weight = 0
-        row_full = True
+    for y in range(height):
+
+        cnt = 0
         for x in range(width):
             if field[y][x] != 0:
-                row_weight += row
-            else:
-                row_full = False
-                pass
-                #for yy in range(row):
-                #    if field[yy][x] != 0:
-                #        row_weight += 2 * (height - yy)
-        weight += (-2 * row_weight) if row_full else row_weight
+                cnt += 1
+        row_weight = (height - y) * cnt
+        print(y, cnt, row_weight)
+        weight += row_weight
 
     return weight
 
@@ -158,7 +153,7 @@ def solve(field, piece, px, py, show=None):
             down = 0
             while test_collision(ground, test_piece, test_x, test_y + 1 + down) is not True:
                 down += 1
-            field = merge_field(ground, test_piece, test_x, test_y)
+            field = merge_field(ground, test_piece, test_x, test_y + down)
             weight = measure(field)
             print('Rot {}x, Shift {}x, Down {}x, Weight {}'.format(rot, shift, down, weight))
             possiblities.append([rot, shift, down])
@@ -166,7 +161,7 @@ def solve(field, piece, px, py, show=None):
 
     index = weights.index(min(weights))
     result = possiblities[index]
-    print('Res: {} .. Rot {}x, Shift {}x, Down {}x'.format(index, result[0], result[1], result[2]))
+    print('Res: {} .. Rot {}x, Shift {}x, Down {}x, Weight {}'.format(index, result[0], result[1], result[2], weights[index]))
     if show is not None:
         for i in range(result[0]):
             original = rotate(original)
@@ -174,6 +169,7 @@ def solve(field, piece, px, py, show=None):
         y = ory + result[2]
         print(x, y)
         field = merge_field(ground, original, x, y)
+        print('measure', measure(field))
         show(field, wait=500)
 
     #print()
