@@ -22,21 +22,24 @@ def test_collision(ground, piece, px, py):
 
     pw = len(piece[0])
     ph = len(piece)
+    gw = len(ground[0])
+    gh = len(ground)
 
     for x in range(pw):
         for y in range(ph):
-            pxx = px + x
-            pyy = py + y
+            if (piece != 0):
+                pxx = px + x
+                pyy = py + y
 
-            if ((pxx < 0) or (pyy < 0)) and (piece[y][x] != 0):
-                return True
-
-            try:
-                if (piece[y][x] != 0) and (ground[pyy][pxx] != 0):
+                if ((pxx < 0) or (pyy < 0) or (pxx >= gw) or (pyy >= gh)):
+                    #print(px, py, pw, ph, gw, gh, 'True outbound')
                     return True
-            except IndexError:
-                return True
 
+                if ground[pyy][pxx] != 0:
+                    #print(px, py, pw, ph, gw, gh, 'True')
+                    return True
+
+    #print(px, py, pw, ph, gw, gh, 'False')
     return False
 
 
@@ -93,6 +96,8 @@ def measure(field):
 
 def solve(field, piece, px, py, show=None):
 
+    #print(px, py)
+
     if piece is None:
         return None
 
@@ -112,9 +117,9 @@ def solve(field, piece, px, py, show=None):
     ory = py
 
     ground = []
-    for y in range(len(field)):
+    for y in range(height):
         ground.append([])
-        for x in range(len(field[0])):
+        for x in range(width):
             ground[-1].append(field[y][x])
 
     #if show is not None:
@@ -149,35 +154,30 @@ def solve(field, piece, px, py, show=None):
             #    field = merge_field(ground, test_piece, test_x, ory)
             #    show(field, wait=200)
 
-            for i in range(height):
-                test_y = ory + i + 1
-                if test_collision(ground, test_piece, test_x, test_y):
-                    test_y -= 1
-                    field = merge_field(ground, test_piece, test_x, test_y)
-                    weight = measure(field)
-                    print('Rot {}x, Shift {}x, Down {}x, Weight {}'.format(rot, shift, test_y, weight))
-                    possiblities.append([rot, shift, test_y])
-                    weights.append(weight)
-                    # test result here
-
-                    #if show is not None:
-                    #    show(field, wait=200)
-                    break  # goto next shift
+            test_y = ory
+            down = 0
+            while test_collision(ground, test_piece, test_x, test_y + 1 + down) is not True:
+                down += 1
+            field = merge_field(ground, test_piece, test_x, test_y)
+            weight = measure(field)
+            print('Rot {}x, Shift {}x, Down {}x, Weight {}'.format(rot, shift, down, weight))
+            possiblities.append([rot, shift, down])
+            weights.append(weight)
 
     index = weights.index(min(weights))
     result = possiblities[index]
     print('Res: {} .. Rot {}x, Shift {}x, Down {}x'.format(index, result[0], result[1], result[2]))
     if show is not None:
-        test_pc = []
-        for y in range(len(original)):
-            test_pc.append([])
-            for x in range(len(original[0])):
-                test_pc[-1].append(original[y][x])
         for i in range(result[0]):
-            test_pc = rotate(test_pc, side='R')
+            original = rotate(original)
         x = orx + result[1]
         y = ory + result[2]
-        merge_field(ground, test_pc, x, y)
+        print(x, y)
+        field = merge_field(ground, original, x, y)
         show(field, wait=500)
+
+    #print()
+    #for p in possiblities:
+    #    print(p)
 
     return result
