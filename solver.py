@@ -1,72 +1,8 @@
-import copy
+from play import rotate, test_collision, merge_field
 
-def rotate(piece, side='L'):
-
-    w = len(piece[0])
-    h = len(piece)
-
-    new_piece = []
-
-    for y in range(w):
-        new_piece.append([])
-        for x in range(h):
-            if side != 'L':
-                new_piece[-1].append(piece[h - 1 - x][y])
-            else:
-                new_piece[-1].append(piece[x][w - 1 - y])
-
-    return new_piece
-
-
-def test_collision(ground, piece, px, py):
-
-    pw = len(piece[0])
-    ph = len(piece)
-    gw = len(ground[0])
-    gh = len(ground)
-
-    for x in range(pw):
-        for y in range(ph):
-            if (piece[y][x] != 0):
-                pxx = px + x
-                pyy = py + y
-
-                if ((pxx < 0) or (pyy < 0) or (pxx >= gw) or (pyy >= gh)):
-                    #print(px, py, pw, ph, gw, gh, 'True outbound')
-                    return True
-
-                if ground[pyy][pxx] != 0:
-                    #print(px, py, pw, ph, gw, gh, 'True')
-                    return True
-
-    #print(px, py, pw, ph, gw, gh, 'False')
-    return False
-
-
-def merge_field(ground, piece, px, py):
-
-    gw = len(ground[0])
-    gh = len(ground)
-
-    field = []
-
-    for y in range(gh):
-        field.append([])
-        for x in range(gw):
-            field[-1].append(1 if (ground[y][x] != 0) else 0)
-
-    pw = len(piece[0])
-    ph = len(piece)
-
-    for y in range(ph):
-        for x in range(pw):
-            try:
-                if piece[y][x]:
-                    field[y+py][x+px] = 2
-            except IndexError:
-                print('Solver merge error: {} {} <- {} {}'.format(y+py, x+px, y, x))
-
-    return field
+ROW_WEIGHT = 1
+HOLLOW_WEIGHT = 10
+FULL_ROW_WEIGHT = 10
 
 
 def measure(field):
@@ -74,17 +10,32 @@ def measure(field):
     width = len(field[0])
     height = len(field)
 
-    weight: int = 0
+    weight: int = 0 # total weight of field (will be calculated)
 
     for y in range(height):
 
-        cnt = 0
+        row = 0 # how many boxes in row
+        hollows = 0 # how many hollows in row
+        filled = True # is the row filled?
+
         for x in range(width):
             if field[y][x] != 0:
-                cnt += 1
-        row_weight = (height - y) * cnt
+                row += 1
+            else:
+                filled = False
+
+                #  find hoolows
+                for yy in range(y):
+                    if field[yy][x] != 0:
+                        hollows += 1
+
+        if filled: # if filled, substract weight
+            row_weight = -(row * FULL_ROW_WEIGHT)
+        else: # if not filled add weight plus hollows
+            row_weight = (height - y) * row * ROW_WEIGHT + (height - y) * hollows * HOLLOW_WEIGHT
+
         #print(y, cnt, row_weight)
-        weight += row_weight
+        weight += row_weight # add row weight to total weight
 
     return weight
 
@@ -129,6 +80,9 @@ def solve(field, piece, px, py, show=None):
             for x in range(len(original[0])):
                 test_piece[-1].append(original[y][x])
 
+        if test_collision(ground, test_piece, orx, ory):
+            return None
+
         noway = False
         for i in range(rot):
             test_piece = rotate(test_piece)
@@ -158,9 +112,9 @@ def solve(field, piece, px, py, show=None):
             print('Rot {}x, Shift {}x, Down {}x, Weight {}'.format(rot, shift, down, weight))
             possiblities.append([rot, shift, down])
             weights.append(weight)
-            if show is not None:
-                field = merge_field(ground, test_piece, test_x, test_y + down)
-                show(field, wait=200)
+            #if show is not None:
+            #    field = merge_field(ground, test_piece, test_x, test_y + down)
+            #    show(field, wait=200)
 
     index = weights.index(min(weights))
     result = possiblities[index]
@@ -171,9 +125,9 @@ def solve(field, piece, px, py, show=None):
         x = orx + result[1]
         y = ory + result[2]
         print(x, y)
-        field = merge_field(ground, original, x, y)
+        field = merge_field(ground, original, x, y, bg=7, fg=2)
         print('measure', measure(field))
-        show(field, wait=500)
+        show(field, wait=1000)
 
     #print()
     #for p in possiblities:

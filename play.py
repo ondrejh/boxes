@@ -10,6 +10,72 @@ pieces = {'T': [[1, 1, 1], [0, 1, 0]],
           'I': [[7, 7, 7, 7], ]}
 
 
+def rotate(piece, side='L'):
+
+    w = len(piece[0])
+    h = len(piece)
+
+    new_piece = []
+
+    for y in range(w):
+        new_piece.append([])
+        for x in range(h):
+            if side != 'L':
+                new_piece[-1].append(piece[h - 1 - x][y])
+            else:
+                new_piece[-1].append(piece[x][w - 1 - y])
+
+    return new_piece
+
+
+def test_collision(ground, piece, px, py):
+
+    h = len(piece)
+    w = len(piece[0])
+    gh = len(ground)
+    gw = len(ground[0])
+
+    for x in range(w):
+        for y in range(h):
+            if piece[y][x] != 0:
+                if not (0 <= (px + x) < gw):
+                    return True
+                if not (0 <= (py + y) < gh):
+                    return True
+                if ground[py + y][px + x] != 0:
+                    return True
+
+    return False
+
+
+def merge_field(ground, piece, px, py, bg=None, fg=None):
+
+    gw = len(ground[0])
+    gh = len(ground)
+
+    field = []
+
+    for y in range(gh):
+        field.append([])
+        for x in range(gw):
+            field[-1].append((ground[y][x] if (bg is None) else bg) if (ground[y][x] != 0) else 0)
+
+    if piece is not None:
+
+        pw = len(piece[0])
+        ph = len(piece)
+
+        for y in range(ph):
+            for x in range(pw):
+                try:
+                    if piece[y][x] != 0:
+                        field[y+py][x+px] = piece[y][x] if (fg is None) else fg
+                except IndexError:
+                    print('Solver merge error: {} {} <- {} {}'.format(y+py, x+px, y, x))
+
+    return field
+
+
 class Play:
 
     def __init__(self, columns, rows):
@@ -38,67 +104,47 @@ class Play:
 
         self.merge_field()
 
-    def piece_fall(self, test=False):
+    def piece_fall(self):
 
-        if not test:
-            if self.piece is None:
-                if self.delete_row(self.test_fullrow()):
-                    return
-
-                self.piece_insert(random.choice(list(pieces.keys())))
+        if self.piece is None:
+            if self.delete_row(self.test_fullrow()):
                 return
+
+            self.piece_insert(random.choice(list(pieces.keys())))
+            return
 
         new_py = self.py + 1
 
-        if self.test_collision(py=new_py):
-            if test:
-                return True
+        if test_collision(self.ground, self.piece, self.px, new_py):
             self.piece_ground()
             return
 
         self.py = new_py
-        if test:
-            return False
 
         self.merge_field()
 
-    def piece_move(self, side='L', test=False):
+    def piece_move(self, side='L'):
 
         new_px = (self.px + 1) if (side != 'L') else (self.px - 1)
 
-        if self.test_collision(px=new_px):
+        if test_collision(self.ground, self.piece, new_px, self.py):
             return False
 
         self.px = new_px
-        if test:
-            return True
 
         self.merge_field()
 
-    def piece_rotate(self, side='L', test=False):
+    def piece_rotate(self, side='L'):
 
         if self.piece is None:
             return
 
-        w = len(self.piece[0])
-        h = len(self.piece)
+        new_piece = rotate(self.piece, side=side)
 
-        new_piece = []
-
-        for y in range(w):
-            new_piece.append([])
-            for x in range(h):
-                if side != 'L':
-                    new_piece[-1].append(self.piece[h-1-x][y])
-                else:
-                    new_piece[-1].append(self.piece[x][w-1-y])
-
-        if self.test_collision(new_piece):
+        if test_collision(self.ground, new_piece, self.px, self.py):
             return False
 
         self.piece = new_piece
-        if test:
-            return True
 
         self.merge_field()
 
@@ -144,43 +190,22 @@ class Play:
 
     def merge_field(self):
 
-        for x in range(self.x):
-            for y in range(self.y):
-                self.field[y][x] = self.ground[y][x]
+        self.field = merge_field(self.ground, self.piece, self.px, self.py)
 
-        if self.piece is not None:
+        #for x in range(self.x):
+        #    for y in range(self.y):
+        #        self.field[y][x] = self.ground[y][x]
 
-            h = len(self.piece)
-            w = len(self.piece[0])
+        #if self.piece is not None:
 
-            for x in range(w):
-                for y in range(h):
-                    if (self.piece[y][x] != 0) and (0 <= (x + self.px) < self.x) and (0 <= (y + self.py) < self.y):
-                        self.field[y+self.py][x+self.px] = self.piece[y][x]
+        #    h = len(self.piece)
+        #    w = len(self.piece[0])
 
-    def test_collision(self, piece=None, px=None, py=None):
+        #    for x in range(w):
+        #        for y in range(h):
+        #            if (self.piece[y][x] != 0) and (0 <= (x + self.px) < self.x) and (0 <= (y + self.py) < self.y):
+        #                self.field[y+self.py][x+self.px] = self.piece[y][x]
 
-        if piece is None:
-            piece = self.piece
-        if px is None:
-            px = self.px
-        if py is None:
-            py = self.py
+    def test_collision(self):
 
-        if piece is None:
-            return False
-
-        h = len(piece)
-        w = len(piece[0])
-
-        for x in range(w):
-            for y in range(h):
-                if piece[y][x] != 0:
-                    if not (0 <= (px + x) < self.x):
-                        return True
-                    if not (0 <= (py + y) < self.y):
-                        return True
-                    if self.ground[py+y][px+x] != 0:
-                        return True
-
-        return False
+        return test_collision(self.ground, self.piece, self.px, self.py)

@@ -80,7 +80,10 @@ class Boxes:
                     if event.key == pygame.K_p:
                         self.pause = not self.pause
                     if event.key == pygame.K_s:
+                        p = self.pause
+                        self.pause = True
                         solve(self.play.ground, self.play.piece, self.play.px, self.play.py, self.show)
+                        self.pause = p
 
                 self.show()
 
