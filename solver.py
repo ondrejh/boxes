@@ -1,8 +1,8 @@
 from play import rotate, test_collision, merge_field
 
 ROW_WEIGHT = 1
-HOLLOW_WEIGHT = 10
-FULL_ROW_WEIGHT = 10
+HOLLOW_WEIGHT = 5
+FULL_ROW_WEIGHT = 3
 
 
 def measure(field):
@@ -29,12 +29,12 @@ def measure(field):
                     if field[yy][x] != 0:
                         hollows += 1
 
-        if filled: # if filled, substract weight
+        if filled: # if filled subtract weight
             row_weight = -(row * FULL_ROW_WEIGHT)
         else: # if not filled add weight plus hollows
             row_weight = (height - y) * row * ROW_WEIGHT + (height - y) * hollows * HOLLOW_WEIGHT
 
-        #print(y, cnt, row_weight)
+        # print(y, cnt, row_weight)
         weight += row_weight # add row weight to total weight
 
     return weight
@@ -42,7 +42,7 @@ def measure(field):
 
 def solve(field, piece, px, py, show=None):
 
-    #print(px, py)
+    # print(px, py)
 
     if piece is None:
         return None
@@ -68,7 +68,7 @@ def solve(field, piece, px, py, show=None):
         for x in range(width):
             ground[-1].append(field[y][x])
 
-    #if show is not None:
+    # if show is not None:
     #    field = merge_field(ground, original, orx, ory)
     #    show(field, wait=500)
 
@@ -96,10 +96,10 @@ def solve(field, piece, px, py, show=None):
 
             test_x = orx + shift
             if test_collision(ground, test_piece, test_x, ory):
-                #print('Rot {}, Shift {} NO'.format(rot, shift))
+                # print('Rot {}, Shift {} NO'.format(rot, shift))
                 continue  # cant use this shift (of the rotation)
 
-            #if show is not None:
+            # if show is not None:
             #    field = merge_field(ground, test_piece, test_x, ory)
             #    show(field, wait=200)
 
@@ -112,13 +112,14 @@ def solve(field, piece, px, py, show=None):
             print('Rot {}x, Shift {}x, Down {}x, Weight {}'.format(rot, shift, down, weight))
             possiblities.append([rot, shift, down])
             weights.append(weight)
-            #if show is not None:
+            # if show is not None:
             #    field = merge_field(ground, test_piece, test_x, test_y + down)
             #    show(field, wait=200)
 
     index = weights.index(min(weights))
     result = possiblities[index]
-    print('Res: {} .. Rot {}x, Shift {}x, Down {}x, Weight {}'.format(index, result[0], result[1], result[2], weights[index]))
+    print('Res: {} .. Rot {}x, Shift {}x, Down {}x, Weight {}'.format(index, result[0], result[1], result[2],
+                                                                      weights[index]))
     if show is not None:
         for i in range(result[0]):
             original = rotate(original)
@@ -129,8 +130,8 @@ def solve(field, piece, px, py, show=None):
         print('measure', measure(field))
         show(field, wait=1000)
 
-    #print()
-    #for p in possiblities:
+    # print()
+    # for p in possibilities:
     #    print(p)
 
     return result

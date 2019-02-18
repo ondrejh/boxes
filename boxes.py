@@ -10,7 +10,7 @@ def draw_box(x, y, col, screen, modul=30, edge=3, ox=10, oy=10):
 
     if col is not None:
         c = pygame.Color(col)
-        cl = c//pygame.Color(2, 2, 2)
+        cl = c // pygame.Color(2, 2, 2)
         pygame.draw.rect(screen, c, (ox + x * modul, oy + y * modul, modul, modul), 0)
         pygame.draw.rect(screen, cl, (ox + x * modul, oy + y * modul, modul, modul), edge)
 

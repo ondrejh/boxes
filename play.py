@@ -192,20 +192,6 @@ class Play:
 
         self.field = merge_field(self.ground, self.piece, self.px, self.py)
 
-        #for x in range(self.x):
-        #    for y in range(self.y):
-        #        self.field[y][x] = self.ground[y][x]
-
-        #if self.piece is not None:
-
-        #    h = len(self.piece)
-        #    w = len(self.piece[0])
-
-        #    for x in range(w):
-        #        for y in range(h):
-        #            if (self.piece[y][x] != 0) and (0 <= (x + self.px) < self.x) and (0 <= (y + self.py) < self.y):
-        #                self.field[y+self.py][x+self.px] = self.piece[y][x]
-
     def test_collision(self):
 
         return test_collision(self.ground, self.piece, self.px, self.py)
