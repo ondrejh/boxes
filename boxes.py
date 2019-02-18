@@ -1,91 +1,96 @@
-from tkinter import *
+import pygame
 import random
-
 from play import Play
+from solver import solve
+
+colours = (None, '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#888888')
+
+
+def draw_box(x, y, col, screen, modul=30, edge=3, ox=10, oy=10):
+
+    if col is not None:
+        c = pygame.Color(col)
+        cl = c//pygame.Color(2, 2, 2)
+        pygame.draw.rect(screen, c, (ox + x * modul, oy + y * modul, modul, modul), 0)
+        pygame.draw.rect(screen, cl, (ox + x * modul, oy + y * modul, modul, modul), edge)
 
 
 class Boxes:
 
-    def __init__(self, frame, columns, rows, size=20):
+    def __init__(self):
+        self.width = 8
+        self.heigth = 20
 
-        self.frame = frame
-        self.x = columns
-        self.y = rows
-        self.c = []
+        random.seed()
+        pygame.init()
 
-        for y in range(self.y):
-            self.c.append([])
-            for x in range(self.x):
-                self.c[-1].append(Frame(self.frame, height=size, width=size, relief=FLAT, bg='#fff', bd=2))
-                self.c[-1][-1].grid(row=y, column=x)
+        self.play = Play(self.width, self.heigth)
 
-        self.frame.pack()
+        self.screen = pygame.display.set_mode(((self.width * 30) + 20, (self.heigth * 30) + 20))
+        self.clock = pygame.time.Clock()
 
-        self.colours = [None, '#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#888']
+        self.pause = True
 
-    def set_color(self, column, row, color=None):
+        pygame.time.set_timer(pygame.USEREVENT, 500)
 
-        self.c[row][column]['relief'] = RAISED if color else FLAT
-        self.c[row][column]['bg'] = color if color else '#fff'
+    def show(self, field=None, wait=None):
+        if field is None:
+            field = self.play.field
+        self.screen.fill((0, 0, 0))
+        for y in range(self.heigth):
+            for x in range(self.width):
+                draw_box(x, y, colours[field[y][x]], self.screen)
 
-    def set_field(self, field):
+        pygame.display.flip()
+        if wait:
+            pygame.time.wait(wait)
 
-        for y in range(self.y):
-            for x in range(self.x):
-                self.set_color(x, y, self.colours[field[y][x]])
+    def run(self):
+
+        while True:
+
+            pressed = pygame.key.get_pressed()
+
+            alt_held = pressed[pygame.K_LALT] or pressed[pygame.K_RALT]
+            ctrl_held = pressed[pygame.K_LCTRL] or pressed[pygame.K_RCTRL]
+
+            for event in pygame.event.get():
+
+                # determin if X was clicked, or Ctrl+W or Alt+F4 was used
+                if event.type == pygame.QUIT:
+                    return
+                if event.type == pygame.USEREVENT:
+                    if not self.pause:
+                        self.play.piece_fall()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w and ctrl_held:
+                        return
+                    if event.key == pygame.K_F4 and alt_held:
+                        return
+                    if event.key == pygame.K_ESCAPE:
+                        return
+                    if event.key == pygame.K_UP:
+                        self.play.piece_rotate('R')
+                    if event.key == pygame.K_LEFT:
+                        self.play.piece_move('L')
+                    if event.key == pygame.K_RIGHT:
+                        self.play.piece_move('R')
+                    if event.key == pygame.K_DOWN:
+                        self.play.piece_fall()
+                    if event.key == pygame.K_p:
+                        self.pause = not self.pause
+                    if event.key == pygame.K_s:
+                        p = self.pause
+                        self.pause = True
+                        solve(self.play.ground, self.play.piece, self.play.px, self.play.py, self.show)
+                        self.pause = p
+
+                self.show()
+
+            self.clock.tick(50)
 
 
 if __name__ == "__main__":
 
-    width = 8
-    height = 20
-
-    random.seed()
-
-    root = Tk()
-    main = Frame(root)
-    main.pack()
-    frm_boxes = Frame(main)
-    boxes = Boxes(frm_boxes, width, height)
-    frm_boxes.pack()
-
-    play = Play(width, height)
-
-    def down():
-        play.piece_fall()
-        boxes.set_field(play.field)
-        root.after(500, down)
-
-    def rotate():
-        play.piece_rotate('L')
-        boxes.set_field(play.field)
-
-    def rotate_clock():
-        play.piece_rotate('R')
-        boxes.set_field(play.field)
-
-    def left():
-        play.piece_move('L')
-        boxes.set_field(play.field)
-
-    def right():
-        play.piece_move('R')
-        boxes.set_field(play.field)
-
-    frm_buttons = Frame(main)
-    frm_buttons.pack()
-
-    btn_rotate = Button(frm_buttons, text='C', width=1, command=rotate_clock)
-    btn_rotate.pack(side=LEFT)
-
-    #btn_rotate_left = Button(frm_buttons, text='A', width=1, command=rotate)
-    #btn_rotate_left.pack(side=LEFT)
-
-    btn_move_left = Button(frm_buttons, text='L', width=1, command=left)
-    btn_move_left.pack(side=LEFT)
-
-    btn_move_right = Button(frm_buttons, text='R', width=1, command=right)
-    btn_move_right.pack(side=LEFT)
-
-    root.after(500, down)
-    root.mainloop()
+    app = Boxes()
+    app.run()
